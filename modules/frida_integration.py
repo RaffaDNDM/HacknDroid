@@ -17,7 +17,7 @@ from modules.utility import app_id_from_user_input
 import questionary
 from questionary.prompts.common import Choice
 
-FRIDA_SCRIPTS_PATH = "frida_scripts"
+FRIDA_SCRIPTS_PATH = os.path.join(os.path.dirname(__file__), '../frida_scripts')
 FRIDA_TOOLS_VERSION = "13.0.0"
 
 """
