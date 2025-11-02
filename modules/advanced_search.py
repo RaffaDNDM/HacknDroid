@@ -879,7 +879,7 @@ def full_secrets_search(user_input):
     write_regex_results_csv(all_matches, results_filepath)
     print("Full search results saved to " + colored(results_filepath, "red"))
 
-    print_regex_results_console(all_matches)
+    print_regex_results_console(all_matches, user_input)
 
 def light_secrets_search(user_input):
     target_path = user_input
