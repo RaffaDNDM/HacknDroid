@@ -13,6 +13,8 @@ from prompt_toolkit.history import InMemoryHistory
 from modules.tasks_management import Task
 from prompt_toolkit.shortcuts import clear
 from modules.utility import print_title
+from modules.file_transfer import su_download, upload_to_dest
+from prompt_toolkit.key_binding import KeyBindings
 
 CURRENT_USER = ""
 CURRENT_DIR = ""
@@ -33,14 +35,35 @@ def interactive_adb_shell(user_input):
 
     clear()
     print_title()
-    
+
     while True:
         # Prompt the user for input (tab completion enabled)
         cmd = session.prompt(HTML(f"<shell_user> {CURRENT_USER} </shell_user><shell_pwd> {CURRENT_DIR} </shell_pwd> "), style=shell_style, multiline=False)
+        cmd = cmd.strip()
+        words_in_cmd = cmd.split(" ")
 
         if cmd == "clear":
             clear()
             print_title()
+        elif cmd in ["exit", "quit"]:
+            print("")
+            break
+        elif words_in_cmd[0] in ["download", "upload"]:
+            if len(words_in_cmd) < 2:
+                print(f"[!] Usage: {words_in_cmd[0]} <mobile_path> [local_path]" if words_in_cmd[0] == "download" else f"[!] Usage: {words_in_cmd[0]} <local_path> [mobile_path]")
+            else:
+                if words_in_cmd[0] == "download":
+                    mobile_path = words_in_cmd[1] if words_in_cmd[1].startswith("/") else f"{CURRENT_DIR}/{words_in_cmd[1]}"
+                    local_path = words_in_cmd[2] if len(words_in_cmd) > 2 else "."
+                    su_download(mobile_path, local_path)
+                else:  # upload
+                    local_path = words_in_cmd[1]
+                    if len(words_in_cmd) > 2:
+                        mobile_path = words_in_cmd[2] if words_in_cmd[2].startswith("/") else f"{CURRENT_DIR}/{words_in_cmd[2]}"
+                    else:
+                        mobile_path = CURRENT_DIR
+                    upload_to_dest(local_path, mobile_path)
+                    
         else:
             command = ["adb", '-s', get_session_device_id(), "shell"]
             cmd_input = f"su {CURRENT_USER}\ncd {CURRENT_DIR}\n{cmd}\nwhoami;pwd\n"
