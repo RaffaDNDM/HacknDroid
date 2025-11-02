@@ -811,7 +811,15 @@ def write_regex_results_csv(all_matches, output_file):
     sorted_matches = sorted(all_matches, key=lambda x: (x["pattern_name"], x["file"], x["match"]))
     
     with open(output_file, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=["Regex", "Match", "File"])
+        writer = csv.DictWriter(
+            f, 
+            fieldnames=["Regex", "Match", "File"],
+            # \ as escape character to handle special characters in matches
+            escapechar='\\', 
+            # Force the use of double quotes for all fields to handle internal delimiters
+            quoting=csv.QUOTE_ALL
+        )
+    
         writer.writeheader()
         for match in sorted_matches:
             writer.writerow({
@@ -879,7 +887,7 @@ def full_secrets_search(user_input):
     write_regex_results_csv(all_matches, results_filepath)
     print("Full search results saved to " + colored(results_filepath, "red"))
 
-    print_regex_results_console(all_matches)
+    print_regex_results_console(all_matches, user_input)
 
 def light_secrets_search(user_input):
     target_path = user_input
