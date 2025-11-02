@@ -187,10 +187,21 @@ def download_from_user_input(user_input):
     # Iterate over each mobile path (excluding the last path which is the PC destination folder)
     for mobile_path in paths[:-1]:
         print(mobile_path)
-        # Download each mobile path to the specified PC destination folder
-        download(mobile_path, paths[-1])
 
-def download(mobile_path, dest_path, permissions_check=True):
+        choice = ""
+
+        while True:
+            choice = input("Do you want to delete tempory files/folder created in external storage [y|n]?")
+
+            if choice.lower() in ['y','n']:
+                break
+            else:
+                print(f"Option '{choice}' not available")
+
+        # Download each mobile path to the specified PC destination folder
+        download(mobile_path, paths[-1], remove_from_sd=(choice.lower() == 'y'))
+
+def download(mobile_path, dest_path, remove_from_sd=False, permissions_check=True):
     """
     Downloads a file or folder from a mobile device to a PC using adb pull command.
     
@@ -209,19 +220,26 @@ def download(mobile_path, dest_path, permissions_check=True):
 
     # Check if permissions check is enabled
     if permissions_check:
-        # If the output indicates a permission denied error or no files were pulled
-        print(output)
+        print(error.strip() if error else output, end='\n\n')
+
         if "permission denied" in output.lower() or "0 files pulled" in output.lower() or "permission denied" in error.lower() or "0 files pulled" in error.lower():
-            # Prompt the user to decide if they want to download the file/folder as Super User
-            x = input(colored("[PERMISSION DENIED] ", 'red')+colored("Do you want to download the file/folder as Super User (y/n)? ", "green"))
-
-            # If the user chooses to proceed as Super User
-            if x.lower() == "y":
-                # Call the su_download function to handle the download with elevated permissions
-                su_download(mobile_path, dest_path)
+            
+            while True:
+                # Prompt the user to decide if they want to download the file/folder as Super User
+                x = input(colored("[PERMISSION DENIED] ", 'red')+colored("Do you want to download the file/folder as Super User (y/n)? ", "green"))
 
 
-def su_download(mobile_path, dest_path):
+                # If the user chooses to proceed as Super User
+                if x.lower() == "y":
+                    # Call the su_download function to handle the download with elevated permissions
+                    su_download(mobile_path, dest_path, remove_from_sd)
+                elif x.lower() == "n":
+                    return
+                else:
+                    print(f"Option '{x}' not available")
+
+
+def su_download(mobile_path, dest_path, remove_from_sd):
     """
     Downloads a file or folder from a mobile device to a destination path on the PC using adb and superuser permissions.
     
@@ -261,6 +279,9 @@ def su_download(mobile_path, dest_path):
         # Download the copied folder from the SD card to the destination path on the PC
         download(f"{sdcard}/{rsc_name}", dest_path, permissions_check=False)
 
+        if remove_from_sd:
+            output, error = Task().run(command, input_to_cmd=[f"rm -r {sdcard}/{rsc_name}", "exit"])
+
     # Check if the mobile path is a file
     elif is_mobile_file(mobile_path):
         # Define shell commands to copy the file to the SD card with appropriate permissions
@@ -278,3 +299,6 @@ def su_download(mobile_path, dest_path):
         
         # Download the copied file from the SD card to the destination path on the PC
         download(f"{sdcard}/{rsc_name}", dest_path, permissions_check=False)
+
+        if remove_from_sd:
+            output, error = Task().run(command, input_to_cmd=[f"rm {sdcard}/{rsc_name}", "exit"])
