@@ -80,8 +80,9 @@ def launch_avd_emulator(user_input):
             "-netspeed", "full",
             "-netdelay", "none",
             "-gpu", "host",
+            "-writable-system"
         ]
-        print(f"🚀 Launching emulator '{avd_name}' in backdround...")
+        print(f"🚀 Launching emulator '{avd_name}' in background...")
         # Launching emulator blocks the terminal, allowing script to continue
 
         id = DAEMONS_MANAGER.get_next_id()
