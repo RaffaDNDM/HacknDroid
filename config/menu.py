@@ -1111,8 +1111,8 @@ OPTIONS =   {
                                     
                                     'function': mirroring.mirroring
                                 },
-                                "stop_mirroring" : {
-                                    'description': ['Stop scrcpy session for mobile device mirroring',],
+                                "screenshot" : {
+                                    'description' : ["Screenshot",],
                                     'device_needed': True,
                                     'input_needed': False,
                                     'children': {
@@ -1120,49 +1120,29 @@ OPTIONS =   {
                                         "home" : dict()
                                     },
                                     
-                                    'function': mirroring.stop_mirroring
+                                    'function': mirroring.screenshot
                                 },
-                                "screenshot_video" : {
-                                    'description' : ["Screenshot/Video on the mobile device",],
+                                "video_record" : {
+                                    'description' : ["Start Video Recording",],
                                     'device_needed': True,
+                                    'input_needed': False,
                                     'children': {
-                                        "screenshot" : {
-                                            'description' : ["Screenshot",],
-                                            'device_needed': True,
-                                            'input_needed': False,
-                                            'children': {
-                                                "back" : dict(),
-                                                "home" : dict()
-                                            },
-                                            
-                                            'function': mirroring.screenshot
-                                        },
-                                        "video_record" : {
-                                            'description' : ["Start Video Recording",],
-                                            'device_needed': True,
-                                            'input_needed': False,
-                                            'children': {
-                                                "back" : dict(),
-                                                "home" : dict()
-                                            },
-                                            
-                                            'function': mirroring.record_video
-                                        },
-                                        "stop_video_record" : {
-                                            'description' : ["Stop Video recording",],
-                                            'device_needed': True,
-                                            'input_needed': False,
-                                            'children': {
-                                                "back" : dict(),
-                                                "home" : dict()
-                                            },
-                                            
-                                            'function': mirroring.stop_recording
-                                        },
                                         "back" : dict(),
                                         "home" : dict()
                                     },
                                     
+                                    'function': mirroring.record_video
+                                },
+                                "stop_video_record" : {
+                                    'description' : ["Stop Video recording",],
+                                    'device_needed': True,
+                                    'input_needed': False,
+                                    'children': {
+                                        "back" : dict(),
+                                        "home" : dict()
+                                    },
+                                    
+                                    'function': mirroring.stop_recording
                                 },
                                 "back" : dict(),
                                 "home" : dict()
