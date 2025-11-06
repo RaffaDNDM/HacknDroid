@@ -26,7 +26,7 @@ def reset_app_data(user_input):
     output, error = Task().run(command, is_shell=True)
 
 
-def collect_app_data(user_input):
+def collect_data_storage(user_input):
     """
     Collect data of an application on the mobile device.
 
@@ -36,10 +36,10 @@ def collect_app_data(user_input):
     # Retrieve App ID from user input
     app_id = app_id_from_user_input(user_input)
 
-    dest_folder = os.path.join("results", app_id, "app_data")
+    dest_folder = os.path.join("results", app_id, "data_storage")
     os.makedirs(dest_folder, exist_ok=True)
 
     now = current_date()
-    download(mobile_path=f"/data/data/{app_id}/", dest_path=dest_folder)
+    download(mobile_path=f"/data/data/{app_id}/", dest_path=dest_folder,  remove_from_sd=True)
     print(f"renaming {dest_folder} to {dest_folder.replace(app_id, now)}")
     os.rename(os.path.join(dest_folder, app_id), os.path.join(dest_folder, now))

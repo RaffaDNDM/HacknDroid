@@ -4,7 +4,7 @@ This source file is part of the HacknDroid project.
 Licensed under the Apache License v2.0
 """
 
-from modules import adb, advanced_search, apk_analyzer, apk_install, app_data, app_logs, backup, battery, connectivity, emulator, file_transfer, frida_integration, intent_server, mem_info, merge_apks, mirroring, proxy, shell, signature, tls_certificates, useful_stuff
+from modules import adb, advanced_search, apk_analyzer, apk_install, app_logs, backup, battery, connectivity, data_storage, emulator, file_transfer, frida_integration, intent_server, mem_info, merge_apks, mirroring, proxy, shell, signature, tls_certificates, useful_stuff
 import modules.tasks_management
 
 OPTIONS =   {
@@ -596,7 +596,7 @@ OPTIONS =   {
                                                 "home" : dict()
                                             },
                                             
-                                            'function' : app_data.collect_app_data
+                                            'function' : data_storage.collect_data_storage
                                         },
                                         "reset_app_data" : { 
                                             'description': ["Reset App data",
@@ -608,7 +608,7 @@ OPTIONS =   {
                                                 "home" : dict()
                                             },
                                             
-                                            'function': app_data.reset_app_data
+                                            'function': data_storage.reset_app_data
                                         },
                                         "back" : dict(),
                                         "home" : dict()
