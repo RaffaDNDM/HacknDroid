@@ -22,6 +22,8 @@ from modules.error import ADBConnectionException, OptionNotAvailable
 from modules.adb import get_session_device_id
 from modules.utility import loading_animation, get_terminal_size, print_title
 
+from prompt_toolkit.key_binding import KeyBindings
+
 class CLI():
 
     def __init__(self):
@@ -45,6 +47,32 @@ class CLI():
         # Load the CLI style from the tool_style configuration
         self._style = Style.from_dict(tool_style.STYLE)
         
+        self._kb = KeyBindings()
+
+        @self._kb.add('c-b')   # CTRL + B
+        def _(event):
+            event.app.current_buffer.document = event.app.current_buffer.document  # no-op
+            event.app.exit(result='back')
+
+        @self._kb.add('c-h')   # CTRL + H
+        def _(event):
+            event.app.current_buffer.document = event.app.current_buffer.document  # no-op
+            event.app.exit(result='home')
+
+        @self._kb.add('c-s')   # CTRL + S
+        def _(event):
+            event.app.current_buffer.document = event.app.current_buffer.document  # no-op
+            event.app.exit(result='shortcuts')
+
+        @self._kb.add('backspace') # Do not send the user to home on backspace if buffer is empty
+        def _(event):
+            # Do nothing if buffer is empty
+            if event.app.current_buffer.text:
+                event.app.current_buffer.delete_before_cursor(count=1)
+            else:
+                # Prevent navigating to home
+                pass
+
         print_title()
 
     def completer(text, state):
@@ -81,7 +109,6 @@ class CLI():
                 # Print the title
                 print_title()
                 # Print the shortcut keys
-                print_formatted_text(HTML("<option> > TAB to see options</option>"), style=self._style)
                 print_formatted_text(HTML("<option> > Ctrl+C to skip the device selection</option>"), style=self._style)
 
                 print("")
@@ -130,13 +157,8 @@ class CLI():
                 # Initialize the prompt completer with the children of the current option
                 self._prompt_completer = WordCompleter(options_list)
 
-                print_formatted_text(HTML("<option> > TAB to see options</option>"), style=self._style)
-                print_formatted_text(HTML("<option> > Ctrl+D to stop the program</option>"), style=self._style)
+                print_formatted_text(HTML("<option> > CTRL+S to see shortcuts</option>"), style=self._style)
                 
-                # If arrived at a leaf node, print the CTRL+C shortcut key to cancel the action
-                if len(CURRENT_OPTION['children']) == 2:
-                    print_formatted_text(HTML("<option> > Ctrl+C to cancel the action</option>"), style=self._style)    
-
                 # Get terminal width
                 terminal_width = get_terminal_size()
     
@@ -184,9 +206,23 @@ class CLI():
 
                 else:
                     # Prompt the user for input (tab completion enabled)
-                    choice = prompt(HTML(path+" "), completer=self._prompt_completer, style=self._style, multiline=False, bottom_toolbar=device_info)
+                    choice = prompt(HTML(path+" "), completer=self._prompt_completer, style=self._style, multiline=False, bottom_toolbar=device_info, key_bindings=self._kb)
 
-                    if choice in CURRENT_OPTION['children']:
+                    if choice == 'shortcuts':
+                        print("")
+                        print_formatted_text(HTML("<descr>Available Shortcuts:</descr>"), style=self._style)
+                        print_formatted_text(HTML("<descr> >    TAB :</descr> Show available options"), style=self._style)
+                        print_formatted_text(HTML("<descr> > Ctrl+D :</descr> Exit the program"), style=self._style)
+                        print_formatted_text(HTML("<descr> > Ctrl+B :</descr> Go back to the previous menu"), style=self._style)
+                        print_formatted_text(HTML("<descr> > Ctrl+H :</descr> Go back to the homepage"), style=self._style)
+                        if len(CURRENT_OPTION['children']) == 2:
+                            print_formatted_text(HTML("<descr> > Ctrl+C :</descr> Cancel the current action"), style=self._style)
+                        
+                        print("")
+                        print_formatted_text(HTML("<option>Press ENTER to continue</option>"), style=self._style)
+                        x=input()
+
+                    elif choice in CURRENT_OPTION['children']:
                         # If the input (choice) is a valid option, navigate to the selected level
 
                         if choice == 'back' and len(self._current_path)>1:
