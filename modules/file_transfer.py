@@ -149,9 +149,19 @@ def upload_to_dest(file_folder, dest_folder="/data/tmp"):
     sdcard = utility.sd_path()
     
     # Push the file/folder from PC to the SD card on the mobile device
-    command = ['adb', '-s', get_session_device_id(), 'push', file_folder, sdcard]
+    command = ['adb', '-s', get_session_device_id(), 'push', file_folder, dest_folder]
     output, error = Task().run(command)
     
+    if not (error and "0 files pushed" in error.lower()):
+        print("Upload done!!!")
+        return
+
+    command = ['adb', '-s', get_session_device_id(), 'push', file_folder, sdcard]
+    output, error = Task().run(command)
+
+    if not error:
+        print(f"Upload done to {sdcard}!!!")
+
     # Get the resource name from the file/folder path
     rsc_name = utility.rsc_from_path(file_folder)
     
@@ -159,8 +169,9 @@ def upload_to_dest(file_folder, dest_folder="/data/tmp"):
     command = ['adb', '-s', get_session_device_id(), 'shell']
     shell_input = ["su root", f"mv {sdcard}/{rsc_name} {dest_folder}", "exit"]
     output, error = Task().run(command, input_to_cmd=shell_input)
-
-    print("Upload done!!!")
+    
+    if not error:
+        print("File moved to the desired destination folder!!!")
 
 def download_from_user_input(user_input):
     """
