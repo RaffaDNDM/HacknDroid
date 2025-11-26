@@ -987,7 +987,40 @@ OPTIONS =   {
                                         "home" : dict()
                                     },
                                     
-                                    'function': frida_integration.start_frida
+                                    'function': frida_integration.start_server
+                                },
+                                "fix_device_reboot_after_frida_server_run":{
+                                    'description': ['Uninstall ART on the device and reboot',],
+                                    'device_needed': True,
+                                    'input_needed': False,
+                                    'children': {
+                                        "back" : dict(),
+                                        "home" : dict()
+                                    },
+                                    
+                                    'function': frida_integration.fix_device_reboot_after_frida_server_run
+                                },
+                                "uninstall_frida_modules":{
+                                    'description': ['Uninstall the Frida modules on the PC',],
+                                    'device_needed': False,
+                                    'input_needed': False,
+                                    'children': {
+                                        "back" : dict(),
+                                        "home" : dict()
+                                    },
+                                    
+                                    'function': frida_integration.uninstall_frida_modules
+                                },
+                                "uninstall_frida_server":{
+                                    'description': ['Uninstall the Frida Server from the device',],
+                                    'device_needed': True,
+                                    'input_needed': False,
+                                    'children': {
+                                        "back" : dict(),
+                                        "home" : dict()
+                                    },
+                                    
+                                    'function': frida_integration.uninstall_frida_server_on_device
                                 },
                                 "run_script":{
                                     'description': ['Run Frida scripts on a specific application.',
@@ -1004,7 +1037,7 @@ OPTIONS =   {
                                                 "home" : dict()
                                             },
                                             
-                                            'function': frida_integration.run_frida_script_on_running_app
+                                            'function': frida_integration.run_script_on_running_app
                                         },
                                         "spawn_app":{
                                             'description': ['Spawn the application and run Frida scripts on a specific application.',
@@ -1016,24 +1049,22 @@ OPTIONS =   {
                                                 "home" : dict()
                                             },
                                             
-                                            'function': frida_integration.spawn_app_and_run_frida_script
+                                            'function': frida_integration.spawn_app_and_run_script
                                         },
                                         "back" : dict(),
                                         "home" : dict()
                                     },
                                 },
-                                "uninstall":{
-                                    'description': ['Uninstall Frida',
-                                                    '> Frida and Frida Tools on the PC',
-                                                    '> Frida Server on the device',],
-                                    'device_needed': False,
+                                "versions_installed":{
+                                    'description': ['Frida versions installed on the device',],
+                                    'device_needed': True,
                                     'input_needed': False,
                                     'children': {
                                         "back" : dict(),
                                         "home" : dict()
                                     },
                                     
-                                    'function': frida_integration.uninstall_frida
+                                    'function': frida_integration.print_frida_servers_on_device
                                 },
                                 "back" : dict(),
                                 "home" : dict()

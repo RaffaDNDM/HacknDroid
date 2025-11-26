@@ -22,3 +22,77 @@ STYLE = {
     'space':'white',
     'input': 'ansiwhite bold',
 }
+
+import sys
+import threading
+import time
+from functools import wraps
+
+def with_progress(initial_message="Working"):
+    """
+    Decorator that shows a spinner with a message and ensures DONE is printed only once.
+    """
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            done = False
+            done_printed = False
+            message = [initial_message]
+            lock = threading.RLock()  # reentrant lock
+
+            def clear_line():
+                sys.stdout.write("\r" + " " * 100 + "\r")
+                sys.stdout.flush()
+
+            def animate():
+                dots = ["", ".", "..", "..."]
+                i = 0
+                while not done:
+                    with lock:
+                        clear_line()
+                        sys.stdout.write(f"{message[0]}{dots[i % len(dots)]}")
+                        sys.stdout.flush()
+                    time.sleep(0.3)
+                    i += 1
+                with lock:
+                    if not done_printed:
+                        clear_line()
+                        sys.stdout.write(f"{message[0]}... DONE\n")
+                        sys.stdout.flush()
+
+            thread = threading.Thread(target=animate, daemon=True)
+            thread.start()
+
+            # Safe input/print replacements
+            def safe_print(*args, **kwargs):
+                with lock:
+                    clear_line()
+                    print(*args, **kwargs)
+
+            def safe_input(prompt=""):
+                with lock:
+                    clear_line()
+                    value = input(prompt)
+                return value
+
+            # Temporarily inject safe versions into the function
+            func_globals = func.__globals__
+            old_vals = {k: func_globals.get(k) for k in ["print", "input"]}
+            func_globals.update({"print": safe_print, "input": safe_input})
+
+            try:
+                result = func(*args, **kwargs)
+            finally:
+                done = True
+                thread.join()
+                # Restore originals
+                for k, v in old_vals.items():
+                    if v is None:
+                        func_globals.pop(k, None)
+                    else:
+                        func_globals[k] = v
+
+            return result
+
+        return wrapper
+    return decorator

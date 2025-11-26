@@ -213,7 +213,7 @@ class Task():
         pass
 
     def run(self, command : list, is_shell : bool = False, input_to_cmd : list = None, 
-            process_input=subprocess.PIPE, process_output=subprocess.PIPE, process_error=subprocess.PIPE):
+            process_input=subprocess.PIPE, process_output=subprocess.PIPE, process_error=subprocess.PIPE, cwd : str = None):
         """
         Run a command as a task.
 
@@ -229,9 +229,15 @@ class Task():
             if platform.system() != "Windows":
                 command = " ".join(command)
 
-            self._PROCESS = subprocess.Popen(command, stdin=process_input, stdout=process_output, stderr=process_error ,shell=True, env = os.environ)
+            if cwd:
+                self._PROCESS = subprocess.Popen(command, stdin=process_input, stdout=process_output, stderr=process_error ,shell=True, env = os.environ, cwd=cwd)
+            else:
+                self._PROCESS = subprocess.Popen(command, stdin=process_input, stdout=process_output, stderr=process_error ,shell=True, env = os.environ)
         else:
-            self._PROCESS = subprocess.Popen(command, stdin=process_input, stdout=process_output, stderr=process_error ,text=True, env = os.environ)
+            if cwd:
+                self._PROCESS = subprocess.Popen(command, stdin=process_input, stdout=process_output, stderr=process_error ,text=True, env = os.environ, cwd=cwd)
+            else:
+                self._PROCESS = subprocess.Popen(command, stdin=process_input, stdout=process_output, stderr=process_error ,text=True, env = os.environ)
         
         if input_to_cmd:
             output, error = self._PROCESS.communicate(self.cmd_to_subprocess_string(input_to_cmd, is_shell))
