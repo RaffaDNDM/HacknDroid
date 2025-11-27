@@ -423,16 +423,17 @@ def get_mobile_wifi_ssid():
     """
     command = ['adb', '-s', get_session_device_id(), 'shell', 'dumpsys', 'netstats', '|', 'grep', '-E', 'iface=wlan.*networkId']
     output, error = Task().run(command)
-
-    x = None 
     
     if output:
         REGEX_SSID = r'networkId=\"(.*)\"'
-        x = re.search(REGEX_SSID, output.splitlines()[0])
     else:
-        return None
+        REGEX_SSID = r'current\sSSID\(s\):\{iface=.+,ssid=\"(.*)\"}'
+        command = ['adb', '-s', get_session_device_id(), 'shell', "dumpsys wifi | grep 'current SSID(s):'"]
+        output, error = Task().run(command)
 
-    if x:
-        return x.group(1)
+    mobile_ssid = re.search(REGEX_SSID, output.splitlines()[0])
+
+    if mobile_ssid:
+        return mobile_ssid.group(1)
     else:
         return None

@@ -4,7 +4,7 @@ This source file is part of the HacknDroid project.
 Licensed under the Apache License v2.0
 """
 
-from modules import adb, advanced_search, apk_analyzer, apk_install, app_data, app_logs, backup, battery, connectivity, emulator, file_transfer, frida_integration, intent_server, mem_info, merge_apks, mirroring, proxy, shell, signature, tls_certificates, useful_stuff
+from modules import adb, advanced_search, apk_analyzer, apk_install, app_logs, backup, battery, connectivity, data_storage, emulator, file_transfer, frida_integration, intent_server, mem_info, merge_apks, mirroring, proxy, shell, signature, tls_certificates, useful_stuff
 import modules.tasks_management
 
 OPTIONS =   {
@@ -596,7 +596,7 @@ OPTIONS =   {
                                                 "home" : dict()
                                             },
                                             
-                                            'function' : app_data.collect_app_data
+                                            'function' : data_storage.collect_data_storage
                                         },
                                         "reset_app_data" : { 
                                             'description': ["Reset App data",
@@ -608,7 +608,7 @@ OPTIONS =   {
                                                 "home" : dict()
                                             },
                                             
-                                            'function': app_data.reset_app_data
+                                            'function': data_storage.reset_app_data
                                         },
                                         "back" : dict(),
                                         "home" : dict()
@@ -987,7 +987,40 @@ OPTIONS =   {
                                         "home" : dict()
                                     },
                                     
-                                    'function': frida_integration.start_frida
+                                    'function': frida_integration.start_server
+                                },
+                                "fix_device_reboot_after_frida_server_run":{
+                                    'description': ['Uninstall ART on the device and reboot',],
+                                    'device_needed': True,
+                                    'input_needed': False,
+                                    'children': {
+                                        "back" : dict(),
+                                        "home" : dict()
+                                    },
+                                    
+                                    'function': frida_integration.fix_device_reboot_after_frida_server_run
+                                },
+                                "uninstall_frida_modules":{
+                                    'description': ['Uninstall the Frida modules on the PC',],
+                                    'device_needed': False,
+                                    'input_needed': False,
+                                    'children': {
+                                        "back" : dict(),
+                                        "home" : dict()
+                                    },
+                                    
+                                    'function': frida_integration.uninstall_frida_modules
+                                },
+                                "uninstall_frida_server":{
+                                    'description': ['Uninstall the Frida Server from the device',],
+                                    'device_needed': True,
+                                    'input_needed': False,
+                                    'children': {
+                                        "back" : dict(),
+                                        "home" : dict()
+                                    },
+                                    
+                                    'function': frida_integration.uninstall_frida_server_on_device
                                 },
                                 "run_script":{
                                     'description': ['Run Frida scripts on a specific application.',
@@ -1004,7 +1037,7 @@ OPTIONS =   {
                                                 "home" : dict()
                                             },
                                             
-                                            'function': frida_integration.run_frida_script_on_running_app
+                                            'function': frida_integration.run_script_on_running_app
                                         },
                                         "spawn_app":{
                                             'description': ['Spawn the application and run Frida scripts on a specific application.',
@@ -1016,24 +1049,22 @@ OPTIONS =   {
                                                 "home" : dict()
                                             },
                                             
-                                            'function': frida_integration.spawn_app_and_run_frida_script
+                                            'function': frida_integration.spawn_app_and_run_script
                                         },
                                         "back" : dict(),
                                         "home" : dict()
                                     },
                                 },
-                                "uninstall":{
-                                    'description': ['Uninstall Frida',
-                                                    '> Frida and Frida Tools on the PC',
-                                                    '> Frida Server on the device',],
-                                    'device_needed': False,
+                                "versions_installed":{
+                                    'description': ['Frida versions installed on the device',],
+                                    'device_needed': True,
                                     'input_needed': False,
                                     'children': {
                                         "back" : dict(),
                                         "home" : dict()
                                     },
                                     
-                                    'function': frida_integration.uninstall_frida
+                                    'function': frida_integration.print_frida_servers_on_device
                                 },
                                 "back" : dict(),
                                 "home" : dict()
@@ -1111,8 +1142,8 @@ OPTIONS =   {
                                     
                                     'function': mirroring.mirroring
                                 },
-                                "stop_mirroring" : {
-                                    'description': ['Stop scrcpy session for mobile device mirroring',],
+                                "screenshot" : {
+                                    'description' : ["Screenshot",],
                                     'device_needed': True,
                                     'input_needed': False,
                                     'children': {
@@ -1120,49 +1151,29 @@ OPTIONS =   {
                                         "home" : dict()
                                     },
                                     
-                                    'function': mirroring.stop_mirroring
+                                    'function': mirroring.screenshot
                                 },
-                                "screenshot_video" : {
-                                    'description' : ["Screenshot/Video on the mobile device",],
+                                "video_record" : {
+                                    'description' : ["Start Video Recording",],
                                     'device_needed': True,
+                                    'input_needed': False,
                                     'children': {
-                                        "screenshot" : {
-                                            'description' : ["Screenshot",],
-                                            'device_needed': True,
-                                            'input_needed': False,
-                                            'children': {
-                                                "back" : dict(),
-                                                "home" : dict()
-                                            },
-                                            
-                                            'function': mirroring.screenshot
-                                        },
-                                        "video_record" : {
-                                            'description' : ["Start Video Recording",],
-                                            'device_needed': True,
-                                            'input_needed': False,
-                                            'children': {
-                                                "back" : dict(),
-                                                "home" : dict()
-                                            },
-                                            
-                                            'function': mirroring.record_video
-                                        },
-                                        "stop_video_record" : {
-                                            'description' : ["Stop Video recording",],
-                                            'device_needed': True,
-                                            'input_needed': False,
-                                            'children': {
-                                                "back" : dict(),
-                                                "home" : dict()
-                                            },
-                                            
-                                            'function': mirroring.stop_recording
-                                        },
                                         "back" : dict(),
                                         "home" : dict()
                                     },
                                     
+                                    'function': mirroring.record_video
+                                },
+                                "stop_video_record" : {
+                                    'description' : ["Stop Video recording",],
+                                    'device_needed': True,
+                                    'input_needed': False,
+                                    'children': {
+                                        "back" : dict(),
+                                        "home" : dict()
+                                    },
+                                    
+                                    'function': mirroring.stop_recording
                                 },
                                 "back" : dict(),
                                 "home" : dict()

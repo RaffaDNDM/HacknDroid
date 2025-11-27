@@ -23,7 +23,8 @@ import xml.etree.ElementTree as ET
 import zipfile
 import sys
 
-DATA_APP_FOLDER = "/data/app"
+# DATA_APP_FOLDER = "/data/app"
+
 '''
 Certificate Pinning
     - SHA256 string: r'^[a-fA-F0-9]{64}$
@@ -354,7 +355,7 @@ def get_apk_from_device(user_input, check_for_merge=True):
         # Check for app with multiple APKs to be merged
         if check_for_merge:
             # Ask the user to merge or not the APKs 
-            print("You have multiple APKs. Do you want to also merge them (y/n)?", end=" ")
+            print(colored("[Multiple APKs]", "yellow")+colored(" Do you want to also merge them (y/n)?","green"), end=" ")
             choice = input()
 
             if choice.lower()=="y":
@@ -363,10 +364,12 @@ def get_apk_from_device(user_input, check_for_merge=True):
         else:
             # Merge the APKs
             apk_name = merge_from_dir(app_folder)
-    else:
+    elif num_apks == 1:
         # The app is composed by a unique APK 
         apk_files = [os.path.join(app_folder,f) for f in os.listdir(app_folder) if f.endswith('.apk')]
         apk_name = apk_files[0]
+    else:
+        print(colored("[!] No APKs downloaded from the mobile device for the specified app.", "red"))
 
     return apk_name, app_id
 
@@ -601,32 +604,30 @@ def transfer_apks_from_device(user_input):
     # Get the App ID from the user input (App ID or words belonging to the App ID)
     app_id = app_id_from_user_input(user_input)
 
-    # Identify the subfolder of /data/app/ for the user-installed app
-    # (a subfolder has the format '<app-id>-<uuid>')
+    # Identify the subfolder of /data/app/<random_id>/<app-id> for the user-installed app
     # Note: the apk folder can be also downloaded without root permission 
     # pm list packages -f (to print the path of the apks for each package)
     # adb pull <apk_package_path> <pc_path>
-    command = ['adb', '-s', get_session_device_id(), 'shell']
-    shell_input = ["su root",f'ls {DATA_APP_FOLDER} | grep "{app_id}"', "exit"]
+    command = ['adb', '-s', get_session_device_id(), 'shell','pm list packages -f | grep "{}" | sed -E \'s/package:(.*)\\/[^/]+\\.apk=.*/\\1/\''.format(app_id)]
     
-    output, error = Task().run(command, input_to_cmd=shell_input)
+    output, error = Task().run(command)
 
     # App folder with the APKs
     app_folder = output.strip()
-    print(colored("Mobile App folder: ", 'cyan')+app_folder)
+    print(colored("Mobile App folder: ", 'cyan')+app_folder, end="\n\n")
 
-    results_folder = os.path.join('results', app_id, "data_folder")
+    now = current_date()
+    results_folder = os.path.join('results', app_id, "apk_folder")
 
     # Create a results folder on the current PC
     os.makedirs(results_folder, exist_ok=True)
-    now = current_date()
 
     # Download the App folder to the results folder
-    download(f"{DATA_APP_FOLDER}/{app_folder}", results_folder)
-    # Rename the folder <results_folder>/<app-id>-<uuid> to <results_folder>/<app-id>
-    os.rename(os.path.join(results_folder, app_folder), os.path.join(results_folder, f"{now}_data_apk_folder"))
-
-    return len(glob.glob(os.path.join(results_folder, f"{now}_data_apk_folder")+'/*.apk', )), os.path.join(os.path.join(results_folder, f"{now}_data_apk_folder")), app_id
+    download(app_folder, results_folder, remove_from_sd=True)
+    
+    os.rename(os.path.join(results_folder, app_folder.split('/')[-1]), os.path.join(results_folder, now))
+    
+    return len(glob.glob(os.path.join(results_folder, now)+'/*.apk', )), os.path.join(results_folder, now), app_id
 
 
 def get_app_id_from_manifest(manifest_path):
@@ -680,7 +681,7 @@ def get_base_apk_from_device(app_id, now):
     results_folder = os.path.join("results", app_id, "apk_analysis", now)
     os.makedirs(results_folder, exist_ok=True)
     pc_apk_filepath = os.path.join(results_folder, os.path.basename(base_apk_path))
-    download(base_apk_path, pc_apk_filepath)
+    download(base_apk_path, pc_apk_filepath, remove_from_sd=True)
 
     return pc_apk_filepath
 

@@ -5,6 +5,8 @@ Licensed under the Apache License v2.0
 """
 
 from secrets import choice
+
+from tabulate import tabulate
 import config.menu as menu
 import config.style as tool_style
 
@@ -21,6 +23,32 @@ from modules.adb import del_session_device_id, get_session_device_model, select_
 from modules.error import ADBConnectionException, OptionNotAvailable
 from modules.adb import get_session_device_id
 from modules.utility import loading_animation, get_terminal_size, print_title
+
+from prompt_toolkit.key_binding import KeyBindings
+
+def print_shortcuts():
+    """
+    Docstring for print_shortcuts
+    """
+
+    print("")
+    print(colored("Available Shortcuts","green"))
+    headers = [colored("Shortcut", "blue"), colored("Description", "blue")]
+
+    rows = [
+        [colored("TAB", "yellow"), "Show available options"],
+        [colored("Ctrl+D", "yellow"), "Exit the program"],
+        [colored("Ctrl+B", "yellow"), "Go back to the previous menu"],
+        [colored("Ctrl+X CTRL+H", "yellow"), "Go back to the homepage"],
+    ]
+
+    if len(CURRENT_OPTION['children']) == 2:
+        rows.append([colored("Ctrl+C", "yellow"), "Cancel the current action"])
+    
+    print(tabulate(rows, headers=headers, tablefmt="fancy_grid"))
+    
+    x=input(colored("\nPress ENTER to continue\n","green"))
+
 
 class CLI():
 
@@ -45,6 +73,23 @@ class CLI():
         # Load the CLI style from the tool_style configuration
         self._style = Style.from_dict(tool_style.STYLE)
         
+        self._kb = KeyBindings()
+
+        @self._kb.add('c-b')   # CTRL + B
+        def _(event):
+            event.app.current_buffer.document = event.app.current_buffer.document  # no-op
+            event.app.exit(result='back')
+
+        @self._kb.add('c-x', 'c-h')   # CTRL + X, CTRL + H
+        def _(event):
+            event.app.current_buffer.document = event.app.current_buffer.document  # no-op
+            event.app.exit(result='home')
+
+        @self._kb.add('c-s')   # CTRL + S
+        def _(event):
+            event.app.current_buffer.document = event.app.current_buffer.document  # no-op
+            event.app.exit(result='shortcuts')
+
         print_title()
 
     def completer(text, state):
@@ -81,7 +126,6 @@ class CLI():
                 # Print the title
                 print_title()
                 # Print the shortcut keys
-                print_formatted_text(HTML("<option> > TAB to see options</option>"), style=self._style)
                 print_formatted_text(HTML("<option> > Ctrl+C to skip the device selection</option>"), style=self._style)
 
                 print("")
@@ -130,13 +174,8 @@ class CLI():
                 # Initialize the prompt completer with the children of the current option
                 self._prompt_completer = WordCompleter(options_list)
 
-                print_formatted_text(HTML("<option> > TAB to see options</option>"), style=self._style)
-                print_formatted_text(HTML("<option> > Ctrl+D to stop the program</option>"), style=self._style)
+                print_formatted_text(HTML("<option> > CTRL+S to see shortcuts</option>"), style=self._style)
                 
-                # If arrived at a leaf node, print the CTRL+C shortcut key to cancel the action
-                if len(CURRENT_OPTION['children']) == 2:
-                    print_formatted_text(HTML("<option> > Ctrl+C to cancel the action</option>"), style=self._style)    
-
                 # Get terminal width
                 terminal_width = get_terminal_size()
     
@@ -165,7 +204,7 @@ class CLI():
                         path+=f"<section{i/2}> {self._current_path[i]} </section{i/2}>"
 
                 else:
-                    # Print the home path ('main')
+                    # Print the home path ('home')
                     path = f"<section> {self._current_path[-1]} </section>"
 
                 if len(CURRENT_OPTION['children']) == 2 and not CURRENT_OPTION['input_needed']:
@@ -184,9 +223,12 @@ class CLI():
 
                 else:
                     # Prompt the user for input (tab completion enabled)
-                    choice = prompt(HTML(path+" "), completer=self._prompt_completer, style=self._style, multiline=False, bottom_toolbar=device_info)
+                    choice = prompt(HTML(path+" "), completer=self._prompt_completer, style=self._style, multiline=False, bottom_toolbar=device_info, key_bindings=self._kb)
 
-                    if choice in CURRENT_OPTION['children']:
+                    if choice == 'shortcuts':
+                        print_shortcuts()
+
+                    elif choice in CURRENT_OPTION['children']:
                         # If the input (choice) is a valid option, navigate to the selected level
 
                         if choice == 'back' and len(self._current_path)>1:

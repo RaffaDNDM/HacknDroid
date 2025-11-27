@@ -1,24 +1,51 @@
-setTimeout(function() {Java.perform(function() {
-    var androidSettings = ['adb_enabled', 'development_settings_enabled', 'play_protect_enabled']; // different properties can be added over here
-    var sdkVersion = Java.use('android.os.Build$VERSION');
-    console.log("Android SDK Version : " + sdkVersion.SDK_INT.value);
-
-    var settingGlobal = Java.use('android.provider.Settings$Secure');
-    settingGlobal.getInt.overload('android.content.ContentResolver', 'java.lang.String', 'int').implementation = function(cr, name, def) {
-        if (name == androidSettings[0]) {
-            console.log('[+] Bypassing USB Debugging protections')
-            return 0;
-        }
-        if (name == androidSettings[1]) {
-            console.log('[+] Bypassing Developer Options')
-            return 0;
-        }
-        if (name == androidSettings[2]) {
-            console.log('[+] Bypassing Play Protect checks')
-            return 1;
-        }
-        var ret = this.getInt(cr, name, def);
-        return ret;
+// Delay to ensure VM is ready
+setTimeout(function() {
+    if (!Java.available) {
+        console.log("[-] Java VM not ready, retrying...");
+        setTimeout(arguments.callee, 1000);
+        return;
     }
 
-})}, 0);
+    Java.perform(function() {
+        console.log("[*] Hooking Android developer settings checks...");
+
+        try {
+            const androidSettings = [
+                "adb_enabled",
+                "development_settings_enabled",
+                "play_protect_enabled"
+            ];
+
+            const SDK = Java.use("android.os.Build$VERSION").SDK_INT.value;
+            console.log("[+] Android SDK Version:", SDK);
+
+            const Secure = Java.use("android.provider.Settings$Secure");
+            const Global = Java.use("android.provider.Settings$Global");
+            const System = Java.use("android.provider.Settings$System");
+
+            // Helper to patch getInt method for a given class
+            function patchSettingsClass(SettingsClass, className) {
+                SettingsClass.getInt.overload(
+                    "android.content.ContentResolver",
+                    "java.lang.String",
+                    "int"
+                ).implementation = function (cr, name, def) {
+                    if (androidSettings.indexOf(name) !== -1) {
+                        console.log(`[+] ${className} Bypass for: ${name}`);
+                        if (name === "play_protect_enabled") return 1;
+                        return 0;
+                    }
+                    return this.getInt(cr, name, def);
+                };
+            }
+
+            patchSettingsClass(Secure, "Settings.Secure");
+            patchSettingsClass(Global, "Settings.Global");
+            patchSettingsClass(System, "Settings.System");
+
+            console.log("[+] Developer/USB/PlayProtect bypass active ✅");
+        } catch (e) {
+            console.log("[-] Error in Developer mode bypass:", e);
+        }
+    });
+}, 0);
