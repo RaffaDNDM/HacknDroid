@@ -12,7 +12,7 @@ from prompt_toolkit import PromptSession
 from prompt_toolkit.history import InMemoryHistory
 from modules.tasks_management import Task
 from prompt_toolkit.shortcuts import clear
-from modules.utility import print_title
+from config.style import print_title
 from modules.file_transfer import su_download, upload_to_dest
 from prompt_toolkit.key_binding import KeyBindings
 

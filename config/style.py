@@ -4,6 +4,10 @@ This source file is part of the HacknDroid project.
 Licensed under the Apache License v2.0
 """
 
+import os
+from termcolor import colored
+from pyfiglet import Figlet
+
 STYLE = {
     'section': 'bg:#ffffff bold black',
     'section1': 'bg:#dd0000 bold white',
@@ -96,3 +100,30 @@ def with_progress(initial_message="Working"):
 
         return wrapper
     return decorator
+
+def print_title():
+    title = "HacknDroid"
+    title_f = colored(Figlet(font='slant').renderText(title), 'red')
+    print(title_f)
+
+def get_terminal_size():
+    size = os.get_terminal_size()
+    return size.columns
+
+def loading_animation(loading_str, gap, max_time, color_str = None, color_dots = None):
+    dots = ['.', '..', '...']
+    
+    if color_str:
+        loading_str = colored(loading_str, color=color_str)
+
+    if color_dots:
+        dots = [colored(d, color=color_dots) for d in dots]
+
+    time_steps = int(max_time // gap)
+    for i in range(time_steps):
+        sys.stdout.write(f"\r{loading_str}{len(dots)*' '}")  # Carriage return to overwrite the line
+        sys.stdout.write(f'\r{loading_str}{dots[(i%len(dots))]}')  # Carriage return to overwrite the line
+        sys.stdout.flush()  # Ensure it prints immediately
+        time.sleep(gap)  # Delay between dots
+
+    sys.stdout.write(f"\r{loading_str}{len(dots)*'.'}")

@@ -5,11 +5,16 @@ Licensed under the Apache License v2.0
 """
 
 import os
+from prompt_toolkit import HTML, print_formatted_text, prompt
 from tabulate import tabulate
 from termcolor import colored
 from modules.error import ADBConnectionException, OptionNotAvailable
 import configparser
 from modules.tasks_management import Task
+from prompt_toolkit.styles import Style
+import config.style as tool_style
+from prompt_toolkit.shortcuts import clear
+from config.style import print_title, get_terminal_size
 
 def check_connection(adb_shell_output):
     """
@@ -36,37 +41,37 @@ def select_device(user_input):
 
     # Create an instance of ConfigParser
 
-    adb_devices = adb_devices_list()
+    from prompt_toolkit.key_binding import KeyBindings
+    
+    kb = KeyBindings()
+    style = Style.from_dict(tool_style.STYLE)
 
-    try:
-        choice = input(colored("Select the device ID you want to use (or 'none' to deselect devices):\n", 'green'))
-            
-        if choice.lower() == 'none':
-            config = configparser.ConfigParser()
+    @kb.add('c-r')   # CTRL + R
+    def _(event):
+        event.app.current_buffer.document = event.app.current_buffer.document  # no-op
+        event.app.exit(result='refresh')
 
-            script_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-            config_file_path = os.path.join(script_folder, "config.ini")
+    while True:
+        try:
+            clear()
+            print_title()
+            print_formatted_text(HTML("<option> > CTRL+R to refresh list</option>"), style=style)
+            print_formatted_text(HTML("<option> > CTRL+C to skip choice (like 'none')</option>"), style=style)
 
-            if os.path.exists(config_file_path):
-                config.read(config_file_path)
+            # Get terminal width
+            terminal_width = get_terminal_size()
 
-            # Add a new section if it doesn't exist
-            if not config.has_section('General'):
-                return
-            
-            config.remove_section('General')
+            # Create a line that spans the full terminal width
+            line = '━' * terminal_width
+            print(f"\n{line}\n")
 
-            # Write the configuration to a file
-            with open(config_file_path, 'w') as configfile:
-                config.write(configfile)
+            adb_devices = adb_devices_list()
         
-        else:
-            choice = int(choice)
-            print("")
-            
-            if choice >= 0 and choice < len(adb_devices):
+            choice = prompt(HTML("<option>Select the device ID you want to use (</option>'none' to not select devices, 'refresh' to refresh the list<option>):</option>\n"), key_bindings=kb, style=style)
+                
+            if choice.lower() == 'none':
                 config = configparser.ConfigParser()
-        
+
                 script_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
                 config_file_path = os.path.join(script_folder, "config.ini")
 
@@ -75,20 +80,66 @@ def select_device(user_input):
 
                 # Add a new section if it doesn't exist
                 if not config.has_section('General'):
-                    config.add_section('General')
+                    return
                 
-                config.set('General', 'adb_session_device', adb_devices[choice][1])
-                config.set('General', 'adb_session_model', adb_devices[choice][3])
+                config.remove_section('General')
 
                 # Write the configuration to a file
                 with open(config_file_path, 'w') as configfile:
                     config.write(configfile)
 
+                break
+            
+            elif choice.lower() == 'refresh':
+                pass
             else:
-                raise ValueError("")
+                choice = int(choice)
+                print("")
+                
+                if choice >= 0 and choice < len(adb_devices):
+                    config = configparser.ConfigParser()
+            
+                    script_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+                    config_file_path = os.path.join(script_folder, "config.ini")
 
-    except ValueError:
-        raise OptionNotAvailable("")
+                    if os.path.exists(config_file_path):
+                        config.read(config_file_path)
+
+                    # Add a new section if it doesn't exist
+                    if not config.has_section('General'):
+                        config.add_section('General')
+                    
+                    config.set('General', 'adb_session_device', adb_devices[choice][1])
+                    config.set('General', 'adb_session_model', adb_devices[choice][3])
+
+                    # Write the configuration to a file
+                    with open(config_file_path, 'w') as configfile:
+                        config.write(configfile)
+                    
+                    break
+
+                else:
+                    raise ValueError("")
+
+        except ValueError:
+            try:
+                print(colored("Invalid choice. Please select a valid device.", 'red'))
+                prompt(HTML("<option>Press ENTER to continue</option>\n"), style=style, key_bindings=kb)
+            except KeyboardInterrupt as e:
+                del_session_device_id()
+                break
+
+        except ADBConnectionException as e:
+            try:
+                print(colored("No device connected to ADB.", 'red'))
+                prompt(HTML("<option>Press ENTER to refresh</option>\n"),   style=style, key_bindings=kb)
+            except KeyboardInterrupt as e:
+                del_session_device_id()
+                break
+
+        except KeyboardInterrupt as e:
+            del_session_device_id()
+            break
 
 
 def adb_devices_list():
