@@ -10,8 +10,9 @@ from modules.tasks_management import Task, DAEMONS_MANAGER
 import platform
 import re
 from tabulate import tabulate
-from modules.utility import app_id_from_user_input, get_app_id_from_owner_uid, get_owner_from_app_id, ip_and_port_from_user_input, ip_from_user_input, loading_animation, port_from_user_input, pc_wifi_ip
+from modules.utility import app_id_from_user_input, get_app_id_from_owner_uid, get_owner_from_app_id, ip_and_port_from_user_input, ip_from_user_input, port_from_user_input, pc_wifi_ip
 from modules.adb import get_session_device_id
+from config.style import loading_animation
 
 DNS_TASK_ID = -1 
 

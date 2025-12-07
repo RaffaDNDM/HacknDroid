@@ -4,8 +4,6 @@ This source file is part of the HacknDroid project.
 Licensed under the Apache License v2.0
 """
 
-from secrets import choice
-
 from tabulate import tabulate
 import config.menu as menu
 import config.style as tool_style
@@ -22,7 +20,7 @@ from modules.tasks_management import DAEMONS_MANAGER
 from modules.adb import del_session_device_id, get_session_device_model, select_device, start_adb_server
 from modules.error import ADBConnectionException, OptionNotAvailable
 from modules.adb import get_session_device_id
-from modules.utility import loading_animation, get_terminal_size, print_title
+from config.style import print_title, loading_animation, get_terminal_size
 
 from prompt_toolkit.key_binding import KeyBindings
 
@@ -119,33 +117,7 @@ class CLI():
         """
         global CURRENT_OPTION
 
-        while True:
-            try:
-                # Clear the screen
-                clear()
-                # Print the title
-                print_title()
-                # Print the shortcut keys
-                print_formatted_text(HTML("<option> > Ctrl+C to skip the device selection</option>"), style=self._style)
-
-                print("")
-                print_formatted_text(HTML(f"<descr>Select the device you want to use</descr>"), style=self._style)
-                print("")
-
-                select_device("")
-                break
-            
-            except OptionNotAvailable:
-                print(colored("Invalid choice. Please select a valid device.", 'red'))
-                print_formatted_text(HTML("<option>Press ENTER to continue</option>"), style=self._style)
-
-            except ADBConnectionException as e:
-                print(colored("No device connected to ADB.", 'red'))
-                break
-        
-            except KeyboardInterrupt as e:
-                del_session_device_id()
-                break
+        select_device('')
 
         print("")
         loading_animation("Redirecting you to the homepage", 0.5, 3, 'white', 'red')

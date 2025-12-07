@@ -391,24 +391,6 @@ def is_app_on_store(app_id):
 
     return response.status_code == 200
 
-def loading_animation(loading_str, gap, max_time, color_str = None, color_dots = None):
-    dots = ['.', '..', '...']
-    
-    if color_str:
-        loading_str = colored(loading_str, color=color_str)
-
-    if color_dots:
-        dots = [colored(d, color=color_dots) for d in dots]
-
-    time_steps = int(max_time // gap)
-    for i in range(time_steps):
-        sys.stdout.write(f"\r{loading_str}{len(dots)*' '}")  # Carriage return to overwrite the line
-        sys.stdout.write(f'\r{loading_str}{dots[(i%len(dots))]}')  # Carriage return to overwrite the line
-        sys.stdout.flush()  # Ensure it prints immediately
-        time.sleep(gap)  # Delay between dots
-
-    sys.stdout.write(f"\r{loading_str}{len(dots)*'.'}")
-
 
 def current_date():
     # Current date and time
@@ -418,10 +400,6 @@ def current_date():
     formatted_date = now.strftime("%Y-%m-%d_%H-%M-%S")
 
     return formatted_date
-
-def get_terminal_size():
-    size = os.get_terminal_size()
-    return size.columns
 
 def is_port(user_input):
     """
@@ -574,8 +552,3 @@ def get_app_id_from_owner_uid(owner_uid):
         return None
 
     return output.strip()
-
-def print_title():
-    title = "HacknDroid"
-    title_f = colored(Figlet(font='slant').renderText(title), 'red')
-    print(title_f)
